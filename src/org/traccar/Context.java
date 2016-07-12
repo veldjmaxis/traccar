@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,12 @@ import com.ning.http.client.AsyncHttpClient;
 import org.traccar.database.ConnectionManager;
 import org.traccar.database.DataManager;
 import org.traccar.database.IdentityManager;
+import org.traccar.database.NotificationManager;
 import org.traccar.database.PermissionsManager;
+import org.traccar.database.GeofenceManager;
 import org.traccar.geocode.BingMapsReverseGeocoder;
 import org.traccar.geocode.FactualReverseGeocoder;
+import org.traccar.geocode.GeocodeFarmReverseGeocoder;
 import org.traccar.geocode.GisgraphyReverseGeocoder;
 import org.traccar.geocode.GoogleReverseGeocoder;
 import org.traccar.geocode.MapQuestReverseGeocoder;
@@ -99,6 +102,18 @@ public final class Context {
         return serverManager;
     }
 
+    private static GeofenceManager geofenceManager;
+
+    public static GeofenceManager getGeofenceManager() {
+        return geofenceManager;
+    }
+
+    private static NotificationManager notificationManager;
+
+    public static NotificationManager getNotificationManager() {
+        return notificationManager;
+    }
+
     private static final AsyncHttpClient ASYNC_HTTP_CLIENT = new AsyncHttpClient();
 
     public static AsyncHttpClient getAsyncHttpClient() {
@@ -147,6 +162,12 @@ public final class Context {
                 case "factual":
                     reverseGeocoder = new FactualReverseGeocoder(url, key, cacheSize);
                     break;
+                case "geocodefarm":
+                    if (key != null) {
+                        reverseGeocoder = new GeocodeFarmReverseGeocoder(key, cacheSize);
+                    } else {
+                        reverseGeocoder = new GeocodeFarmReverseGeocoder(cacheSize);
+                    }
                 default:
                     if (key != null) {
                         reverseGeocoder = new GoogleReverseGeocoder(key, cacheSize);
@@ -179,7 +200,16 @@ public final class Context {
 
         connectionManager = new ConnectionManager(dataManager);
 
+        if (config.getBoolean("event.geofenceHandler")) {
+            geofenceManager = new GeofenceManager(dataManager);
+        }
+
+        if (config.getBoolean("event.enable")) {
+            notificationManager = new NotificationManager(dataManager);
+        }
+
         serverManager = new ServerManager();
+
     }
 
     public static void init(IdentityManager testIdentityManager) {

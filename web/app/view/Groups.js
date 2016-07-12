@@ -29,7 +29,16 @@ Ext.define('Traccar.view.Groups', {
     selType: 'rowmodel',
 
     tbar: {
-        xtype: 'editToolbar'
+        xtype: 'editToolbar',
+        items: [{
+            xtype: 'button',
+            disabled: true,
+            handler: 'onGeofencesClick',
+            reference: 'toolbarGeofencesButton',
+            glyph: 'xf21d@FontAwesome',
+            tooltip: Strings.sharedGeofences,
+            tooltipType: 'title'
+        }]
     },
 
     listeners: {

@@ -21,7 +21,6 @@ import org.traccar.BaseProtocolDecoder;
 import org.traccar.helper.DateBuilder;
 import org.traccar.helper.Parser;
 import org.traccar.helper.PatternBuilder;
-import org.traccar.model.Event;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
@@ -123,7 +122,7 @@ public class T55ProtocolDecoder extends BaseProtocolDecoder {
         position.setTime(dateBuilder.getDate());
 
         if (parser.hasNext(3)) {
-            position.set(Event.KEY_SATELLITES, parser.next());
+            position.set(Position.KEY_SATELLITES, parser.next());
             if (!identify(parser.next(), channel, remoteAddress)) {
                 return null;
             }
@@ -205,7 +204,7 @@ public class T55ProtocolDecoder extends BaseProtocolDecoder {
         position.setCourse(parser.nextDouble());
         position.setAltitude(parser.nextDouble());
 
-        position.set(Event.KEY_BATTERY, parser.next());
+        position.set(Position.KEY_BATTERY, parser.next());
 
         return position;
     }
@@ -241,7 +240,7 @@ public class T55ProtocolDecoder extends BaseProtocolDecoder {
                 this.position = null;
                 return position;
             }
-        } else if (sentence.length() == 15 && Character.isDigit(sentence.charAt(0))) {
+        } else if (sentence.matches("^[0-9A-F]+$")) {
             identify(sentence, channel, remoteAddress);
         } else if (sentence.startsWith("$GPRMC")) {
             return decodeGprmc(sentence, remoteAddress, channel);

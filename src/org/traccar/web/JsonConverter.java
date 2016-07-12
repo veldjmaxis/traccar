@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 public final class JsonConverter {
@@ -128,7 +129,15 @@ public final class JsonConverter {
                             json.add(name, DATE_FORMAT.print(new DateTime(value)));
                         }
                     } else if (method.getReturnType().equals(Map.class)) {
-                        json.add(name, MiscFormatter.toJson((Map) method.invoke(object)));
+                        Map value = (Map) method.invoke(object);
+                        if (value != null) {
+                            json.add(name, MiscFormatter.toJson(value));
+                        }
+                    } else if (method.getReturnType().equals(List.class)) {
+                        List value = (List) method.invoke(object);
+                        if (value != null) {
+                            json.add(name, arrayToJson(value));
+                        }
                     }
                 } catch (IllegalAccessException | InvocationTargetException error) {
                     Log.warning(error);
@@ -144,7 +153,23 @@ public final class JsonConverter {
         JsonArrayBuilder json = Json.createArrayBuilder();
 
         for (Object object : array) {
-            json.add(objectToJson(object));
+            switch (object.getClass().getSimpleName().toLowerCase()) {
+                case "string":
+                    json.add(object.toString());
+                    break;
+                case "long":
+                    json.add((long) object);
+                    break;
+                case "double":
+                    json.add((double) object);
+                    break;
+                case "boolean":
+                    json.add((boolean) object);
+                    break;
+                default:
+                    json.add(objectToJson(object));
+                    break;
+            }
         }
 
         return json.build();

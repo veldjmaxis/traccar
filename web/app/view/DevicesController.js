@@ -20,7 +20,8 @@ Ext.define('Traccar.view.DevicesController', {
 
     requires: [
         'Traccar.view.CommandDialog',
-        'Traccar.view.DeviceDialog'
+        'Traccar.view.DeviceDialog',
+        'Traccar.view.DeviceGeofences'
     ],
 
     config: {
@@ -29,6 +30,11 @@ Ext.define('Traccar.view.DevicesController', {
                 '*': {
                     selectDevice: 'selectDevice',
                     selectReport: 'selectReport'
+                }
+            },
+            store: {
+                '#Devices': {
+                    update: 'onUpdateDevice'
                 }
             }
         }
@@ -79,6 +85,23 @@ Ext.define('Traccar.view.DevicesController', {
         });
     },
 
+    onGeofencesClick: function () {
+        var admin, device;
+        admin = Traccar.app.getUser().get('admin');
+        device = this.getView().getSelectionModel().getSelection()[0];
+        Ext.create('Traccar.view.BaseWindow', {
+            title: Strings.sharedGeofences,
+            items: {
+                xtype: 'deviceGeofencesView',
+                baseObjectName: 'deviceId',
+                linkObjectName: 'geofenceId',
+                storeName: 'Geofences',
+                urlApi: '/api/devices/geofences',
+                baseObject: device.getData().id
+            }
+        }).show();
+    },
+
     onCommandClick: function () {
         var device, deviceId, command, dialog, comboStore;
         device = this.getView().getSelectionModel().getSelection()[0];
@@ -93,18 +116,24 @@ Ext.define('Traccar.view.DevicesController', {
     },
 
     onFollowClick: function (button, pressed) {
+        var device;
         if (pressed) {
-            var device = this.getView().getSelectionModel().getSelection()[0];
+            device = this.getView().getSelectionModel().getSelection()[0];
             this.fireEvent('selectDevice', device, true);
         }
     },
 
-    onSelectionChange: function (selected) {
+    updateButtons: function (selected) {
         var empty = selected.getCount() === 0;
         this.lookupReference('toolbarEditButton').setDisabled(empty);
         this.lookupReference('toolbarRemoveButton').setDisabled(empty);
-        this.lookupReference('deviceCommandButton').setDisabled(empty);
-        if (!empty) {
+        this.lookupReference('toolbarGeofencesButton').setDisabled(empty);
+        this.lookupReference('deviceCommandButton').setDisabled(empty || (selected.getLastSelected().get('status') !== 'online'));
+    },
+
+    onSelectionChange: function (selected) {
+        this.updateButtons(selected);
+        if (selected.getCount() > 0) {
             this.fireEvent('selectDevice', selected.getLastSelected(), true);
         }
     },
@@ -117,5 +146,9 @@ Ext.define('Traccar.view.DevicesController', {
         if (position !== undefined) {
             this.getView().getSelectionModel().deselectAll();
         }
+    },
+
+    onUpdateDevice: function (store, data) {
+        this.updateButtons(this.getView().getSelectionModel());
     }
 });

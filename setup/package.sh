@@ -94,7 +94,7 @@ package_windows () {
 
   wine app/ISCC.exe windows/traccar.iss
 
-  zip -j traccar-$1-$VERSION.zip windows/Output/setup.exe README.txt
+  zip -j traccar-$1-$VERSION.zip windows/Output/traccar-setup.exe README.txt
 
   rm -rf windows/Output/
   rm -rf tmp/
@@ -102,32 +102,38 @@ package_windows () {
 
 package_unix () {
 
-  mkdir -p out/{bin,conf,data,lib,logs,web}
+  mkdir -p out/{bin,conf,data,lib,logs,web,schema}
 
   cp wrapper/src/bin/sh.script.in out/bin/traccar
   cp wrapper/lib/wrapper.jar out/lib
   cp wrapper/src/conf/wrapper.conf.in out/conf/wrapper.conf
 
-  sed -i 's/tail -1/tail -n 1/g' out/bin/traccar
+  sed -i.bak 's/tail -1/tail -n 1/g' out/bin/traccar
   chmod +x out/bin/traccar
 
   cp ../target/tracker-server.jar out
   cp ../target/lib/* out/lib
-  cp ../database/* out/data
+  cp ../schema/* out/schema
   cp -r ../web/* out/web
   cp unix/traccar.xml out/conf
 
-  sed -i 's/@app.name@/traccar/g' out/bin/traccar
-  sed -i 's/@app.long.name@/traccar/g' out/bin/traccar
+  sed -i.bak 's/@app.name@/traccar/g' out/bin/traccar
+  sed -i.bak 's/@app.long.name@/traccar/g' out/bin/traccar
 
-  sed -i '/wrapper.java.classpath.1/i\wrapper.java.classpath.2=../tracker-server.jar' out/conf/wrapper.conf
-  sed -i '/wrapper.app.parameter.1/i\wrapper.app.parameter.2=../conf/traccar.xml' out/conf/wrapper.conf
-  sed -i 's/wrapper.java.additional.1=/wrapper.java.additional.1=-Dfile.encoding=UTF-8/g' out/conf/wrapper.conf
-  sed -i 's/<YourMainClass>/org.traccar.Main/g' out/conf/wrapper.conf
-  sed -i 's/@app.name@/traccar/g' out/conf/wrapper.conf
-  sed -i 's/@app.long.name@/traccar/g' out/conf/wrapper.conf
-  sed -i 's/@app.description@/traccar/g' out/conf/wrapper.conf
-  sed -i 's/wrapper.logfile=..\/logs\/wrapper.log/wrapper.logfile=..\/logs\/wrapper.log.YYYYMMDD\nwrapper.logfile.rollmode=DATE/g' out/conf/wrapper.conf
+  sed -i.bak '/wrapper.java.classpath.1/a\
+wrapper.java.classpath.2=../tracker-server.jar' out/conf/wrapper.conf
+  sed -i.bak '/wrapper.app.parameter.1/a\
+wrapper.app.parameter.2=../conf/traccar.xml' out/conf/wrapper.conf
+  sed -i.bak 's/wrapper.java.additional.1=/wrapper.java.additional.1=-Dfile.encoding=UTF-8/g' out/conf/wrapper.conf
+  sed -i.bak 's/<YourMainClass>/org.traccar.Main/g' out/conf/wrapper.conf
+  sed -i.bak 's/@app.name@/traccar/g' out/conf/wrapper.conf
+  sed -i.bak 's/@app.long.name@/traccar/g' out/conf/wrapper.conf
+  sed -i.bak 's/@app.description@/traccar/g' out/conf/wrapper.conf
+  sed -i.bak 's/wrapper.logfile=..\/logs\/wrapper.log/wrapper.logfile=..\/logs\/wrapper.log.YYYYMMDD\
+wrapper.logfile.rollmode=DATE/g' out/conf/wrapper.conf
+
+  rm out/bin/traccar.bak
+  rm out/conf/wrapper.conf.bak
 
   eval $2
 
@@ -140,11 +146,11 @@ package_unix () {
 
 package_universal () {
 
-  mkdir -p out/{conf,data,lib,logs,web}
+  mkdir -p out/{conf,data,lib,logs,web,schema}
 
   cp ../target/tracker-server.jar out
   cp ../target/lib/* out/lib
-  cp ../database/* out/data
+  cp ../schema/* out/schema
   cp -r ../web/* out/web
   cp windows/traccar.xml out/conf
   cp README.txt out

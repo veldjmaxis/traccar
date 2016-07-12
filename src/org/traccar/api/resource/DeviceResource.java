@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public class DeviceResource extends BaseResource {
             @QueryParam("all") boolean all, @QueryParam("userId") long userId) throws SQLException {
         if (all) {
             Context.getPermissionsManager().checkAdmin(getUserId());
-            return Context.getDataManager().getAllDevices();
+            return Context.getDataManager().getAllDevicesCached();
         } else {
             if (userId == 0) {
                 userId = getUserId();
@@ -60,6 +60,9 @@ public class DeviceResource extends BaseResource {
         Context.getDataManager().addDevice(entity);
         Context.getDataManager().linkDevice(getUserId(), entity.getId());
         Context.getPermissionsManager().refresh();
+        if (Context.getGeofenceManager() != null) {
+            Context.getGeofenceManager().refresh();
+        }
         return Response.ok(entity).build();
     }
 
@@ -69,6 +72,9 @@ public class DeviceResource extends BaseResource {
         Context.getPermissionsManager().checkReadonly(getUserId());
         Context.getPermissionsManager().checkDevice(getUserId(), id);
         Context.getDataManager().updateDevice(entity);
+        if (Context.getGeofenceManager() != null) {
+            Context.getGeofenceManager().refresh();
+        }
         return Response.ok(entity).build();
     }
 
@@ -79,6 +85,9 @@ public class DeviceResource extends BaseResource {
         Context.getPermissionsManager().checkDevice(getUserId(), id);
         Context.getDataManager().removeDevice(id);
         Context.getPermissionsManager().refresh();
+        if (Context.getGeofenceManager() != null) {
+            Context.getGeofenceManager().refresh();
+        }
         return Response.noContent().build();
     }
 

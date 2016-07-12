@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2015 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.traccar.GlobalTimer;
 import org.traccar.Protocol;
 import org.traccar.helper.Log;
 import org.traccar.model.Device;
+import org.traccar.model.Event;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
@@ -85,14 +86,28 @@ public class ConnectionManager {
             return;
         }
 
-        device.setStatus(status);
-        if (time != null) {
-            device.setLastUpdate(time);
+        if (status.equals(Device.STATUS_MOVING) || status.equals(Device.STATUS_STOPPED)) {
+            device.setMotion(status);
+        } else {
+            if (!status.equals(device.getStatus())) {
+                Event event = new Event(Event.TYPE_DEVICE_OFFLINE, deviceId);
+                if (status.equals(Device.STATUS_ONLINE)) {
+                    event.setType(Event.TYPE_DEVICE_ONLINE);
+                }
+                if (Context.getNotificationManager() != null) {
+                    Context.getNotificationManager().updateEvent(event, null);
+                }
+            }
+            device.setStatus(status);
+
+            Timeout timeout = timeouts.remove(deviceId);
+            if (timeout != null) {
+                timeout.cancel();
+            }
         }
 
-        Timeout timeout = timeouts.remove(deviceId);
-        if (timeout != null) {
-            timeout.cancel();
+        if (time != null) {
+            device.setLastUpdate(time);
         }
 
         if (status.equals(Device.STATUS_ONLINE)) {
@@ -134,6 +149,14 @@ public class ConnectionManager {
         }
     }
 
+    public synchronized void updateEvent(long userId, Event event, Position position) {
+        if (listeners.containsKey(userId)) {
+            for (UpdateListener listener : listeners.get(userId)) {
+                listener.onUpdateEvent(event, position);
+            }
+        }
+    }
+
     public Position getLastPosition(long deviceId) {
         return positions.get(deviceId);
     }
@@ -154,6 +177,7 @@ public class ConnectionManager {
     public interface UpdateListener {
         void onUpdateDevice(Device device);
         void onUpdatePosition(Position position);
+        void onUpdateEvent(Event event, Position position);
     }
 
     public synchronized void addListener(long userId, UpdateListener listener) {

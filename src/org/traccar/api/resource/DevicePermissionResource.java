@@ -38,6 +38,9 @@ public class DevicePermissionResource extends BaseResource {
         Context.getPermissionsManager().checkAdmin(getUserId());
         Context.getDataManager().linkDevice(entity.getUserId(), entity.getDeviceId());
         Context.getPermissionsManager().refresh();
+        if (Context.getGeofenceManager() != null) {
+            Context.getGeofenceManager().refresh();
+        }
         return Response.ok(entity).build();
     }
 
@@ -46,6 +49,9 @@ public class DevicePermissionResource extends BaseResource {
         Context.getPermissionsManager().checkAdmin(getUserId());
         Context.getDataManager().unlinkDevice(entity.getUserId(), entity.getDeviceId());
         Context.getPermissionsManager().refresh();
+        if (Context.getGeofenceManager() != null) {
+            Context.getGeofenceManager().refresh();
+        }
         return Response.noContent().build();
     }
 

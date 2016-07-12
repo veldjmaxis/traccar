@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,26 @@
  */
 package org.traccar.model;
 
-public class Schema {
+public class DeviceGeofence {
 
-    private int version;
+    private long deviceId;
 
-    public int getVersion() {
-        return version;
+    public long getDeviceId() {
+        return deviceId;
     }
 
-    public void setVersion(int version) {
-        this.version = version;
+    public void setDeviceId(long deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    private long geofenceId;
+
+    public long getGeofenceId() {
+        return geofenceId;
+    }
+
+    public void setGeofenceId(long geofenceId) {
+        this.geofenceId = geofenceId;
     }
 
 }

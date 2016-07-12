@@ -38,6 +38,9 @@ public class GroupPermissionResource extends BaseResource {
         Context.getPermissionsManager().checkAdmin(getUserId());
         Context.getDataManager().linkGroup(entity.getUserId(), entity.getGroupId());
         Context.getPermissionsManager().refresh();
+        if (Context.getGeofenceManager() != null) {
+            Context.getGeofenceManager().refresh();
+        }
         return Response.ok(entity).build();
     }
 
@@ -46,6 +49,9 @@ public class GroupPermissionResource extends BaseResource {
         Context.getPermissionsManager().checkAdmin(getUserId());
         Context.getDataManager().unlinkGroup(entity.getUserId(), entity.getGroupId());
         Context.getPermissionsManager().refresh();
+        if (Context.getGeofenceManager() != null) {
+            Context.getGeofenceManager().refresh();
+        }
         return Response.noContent().build();
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2016 Anton Tananaev (anton.tananaev@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
-Ext.define('Traccar.view.UserDevicesController', {
+Ext.define('Traccar.view.NotificationsController', {
     extend: 'Ext.app.ViewController',
-    alias: 'controller.userDevices',
+    alias: 'controller.notificationsController',
 
     init: function () {
         this.userId = this.getView().user.getData().id;
         this.getView().getStore().load({
             scope: this,
             callback: function (records, operation, success) {
-                var userStore = Ext.create('Traccar.store.Devices');
-
-                userStore.load({
+                var notificationsStore = Ext.create('Traccar.store.Notifications');
+                notificationsStore.load({
                     params: {
                         userId: this.userId
                     },
                     scope: this,
                     callback: function (records, operation, success) {
-                        var i, index;
+                        var i, index, attributes, storeRecord;
                         if (success) {
                             for (i = 0; i < records.length; i++) {
-                                index = this.getView().getStore().find('id', records[i].getData().id);
-                                this.getView().getSelectionModel().select(index, true, true);
+                                index = this.getView().getStore().find('type', records[i].getData().type);
+                                attributes = records[i].getData().attributes;
+                                storeRecord = this.getView().getStore().getAt(index);
+                                storeRecord.set('attributes', attributes);
+                                storeRecord.commit();
                             }
                         }
                     }
@@ -44,30 +46,29 @@ Ext.define('Traccar.view.UserDevicesController', {
         });
     },
 
-    onBeforeSelect: function (object, record, index) {
-        Ext.Ajax.request({
-            scope: this,
-            url: '/api/permissions/devices',
-            jsonData: {
-                userId: this.userId,
-                deviceId: record.getData().id
-            },
-            callback: function (options, success, response) {
-                if (!success) {
-                    Traccar.app.showError(response);
-                }
-            }
-        });
+    onBeforeCheckChange: function (column, rowIndex, checked, eOpts) {
+        var fields, record, data;
+        fields = column.dataIndex.split('\.', 2);
+        record = this.getView().getStore().getAt(rowIndex);
+        data = record.get(fields[0]);
+        if (!data[fields[1]]) {
+            data[fields[1]] = 'true';
+        } else {
+            delete data[fields[1]];
+        }
+        record.set(fields[0], data);
+        record.commit();
     },
 
-    onBeforeDeselect: function (object, record, index) {
+    onCheckChange: function (column, rowIndex, checked, eOpts) {
+        var record = this.getView().getStore().getAt(rowIndex);
         Ext.Ajax.request({
             scope: this,
-            method: 'DELETE',
-            url: '/api/permissions/devices',
+            url: '/api/users/notifications',
             jsonData: {
                 userId: this.userId,
-                deviceId: record.getData().id
+                type: record.getData().type,
+                attributes: record.getData().attributes
             },
             callback: function (options, success, response) {
                 if (!success) {

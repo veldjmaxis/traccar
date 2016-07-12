@@ -18,9 +18,10 @@ package org.traccar.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Command extends Extensible {
+public class Command extends Message {
 
     public static final String TYPE_CUSTOM = "custom";
+    public static final String TYPE_IDENTIFICATION = "deviceIdentification";
     public static final String TYPE_POSITION_SINGLE = "positionSingle";
     public static final String TYPE_POSITION_PERIODIC = "positionPeriodic";
     public static final String TYPE_POSITION_STOP = "positionStop";
@@ -36,12 +37,14 @@ public class Command extends Extensible {
     public static final String TYPE_SILENCE_TIME = "silenceTime";
     public static final String TYPE_SET_PHONEBOOK = "setPhonebook";
     public static final String TYPE_VOICE_MESSAGE = "voiceMessage";
+    public static final String TYPE_OUTPUT_CONTROL = "outputControl";
 
     public static final String TYPE_ALARM_GEOFENCE = "movementAlarm";
     public static final String TYPE_ALARM_BATTERY = "alarmBattery";
     public static final String TYPE_ALARM_SOS = "alarmSos";
     public static final String TYPE_ALARM_REMOVE = "alarmRemove";
     public static final String TYPE_ALARM_CLOCK = "alarmClock";
+    public static final String TYPE_ALARM_SPEED = "alarmSpeed";
 
     public static final String KEY_UNIQUE_ID = "uniqueId";
     public static final String KEY_FREQUENCY = "frequency";

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2014 Anton Tananaev (anton.tananaev@gmail.com)
+ * Copyright 2013 - 2016 Anton Tananaev (anton.tananaev@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 package org.traccar.protocol;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.helper.BcdUtil;
 import org.traccar.helper.DateBuilder;
 import org.traccar.helper.UnitsConverter;
-import org.traccar.model.Event;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
@@ -69,7 +69,22 @@ public class GatorProtocolDecoder extends BaseProtocolDecoder {
                 buf.readUnsignedByte(), buf.readUnsignedByte(),
                 buf.readUnsignedByte(), buf.readUnsignedByte());
 
-        if (type == MSG_POSITION_DATA || type == MSG_ROLLCALL_RESPONSE
+        if (type == MSG_HEARTBEAT) {
+
+            if (channel != null) {
+                ChannelBuffer response = ChannelBuffers.dynamicBuffer();
+                response.writeByte(0x24); response.writeByte(0x24); // header
+                response.writeByte(MSG_HEARTBEAT); // size
+                response.writeShort(5);
+                response.writeByte(buf.readUnsignedByte());
+                response.writeByte(0); // main order
+                response.writeByte(0); // slave order
+                response.writeByte(1); // calibration
+                response.writeByte(0x0D);
+                channel.write(response);
+            }
+
+        } else if (type == MSG_POSITION_DATA || type == MSG_ROLLCALL_RESPONSE
                 || type == MSG_ALARM_DATA || type == MSG_BLIND_AREA) {
 
             Position position = new Position();
@@ -96,13 +111,13 @@ public class GatorProtocolDecoder extends BaseProtocolDecoder {
 
             int flags = buf.readUnsignedByte();
             position.setValid((flags & 0x80) != 0);
-            position.set(Event.KEY_SATELLITES, flags & 0x0f);
+            position.set(Position.KEY_SATELLITES, flags & 0x0f);
 
-            position.set(Event.KEY_STATUS, buf.readUnsignedByte());
+            position.set(Position.KEY_STATUS, buf.readUnsignedByte());
             position.set("key", buf.readUnsignedByte());
             position.set("oil", buf.readUnsignedShort() / 10.0);
-            position.set(Event.KEY_POWER, buf.readUnsignedByte() + buf.readUnsignedByte() / 100.0);
-            position.set(Event.KEY_ODOMETER, buf.readUnsignedInt());
+            position.set(Position.KEY_POWER, buf.readUnsignedByte() + buf.readUnsignedByte() / 100.0);
+            position.set(Position.KEY_ODOMETER, buf.readUnsignedInt());
 
             return position;
         }
